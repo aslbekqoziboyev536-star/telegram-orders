@@ -60,6 +60,13 @@ def set_webhook():
 
 # --- STARTUP CONDITIONS ---
 if __name__ == "__main__":
-    # If run locally with python main.py
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    if WEBHOOK_URL:
+        # If running on server with Webhooks
+        port = int(os.environ.get('PORT', 5000))
+        logging.info(f"🚀 Starting Bot with Webhooks on port {port}...")
+        app.run(host='0.0.0.0', port=port)
+    else:
+        # If running locally without Webhook URL
+        logging.info("🐢 WEBHOOK_URL topilmadi. Polling rejimida ishga tushirilmoqda...")
+        bot.remove_webhook()
+        bot.infinity_polling()
