@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="uz">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,43 +36,74 @@
             z-index: 100;
         }
 
-        /* Glass magnifier background spheres */
-        .bg-sphere {
+        /* Liquid background elements */
+        .bg-blob {
             position: fixed;
             border-radius: 50%;
-            filter: blur(60px);
+            filter: blur(100px);
             z-index: -1;
-            animation: float 15s infinite alternate;
-        }
-        
-        .sphere-1 {
-            width: 400px; height: 400px;
-            background: rgba(0, 150, 255, 0.15);
-            top: -100px; left: -100px;
-        }
-        
-        .sphere-2 {
-            width: 500px; height: 500px;
-            background: rgba(255, 0, 150, 0.1);
-            bottom: -150px; right: -150px;
-            animation-delay: -7s;
+            animation: move 20s infinite alternate cubic-bezier(0.45, 0, 0.55, 1);
         }
 
-        @keyframes float {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(30px, 30px); }
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: rgba(0, 150, 255, 0.2);
+            top: -150px;
+            left: -150px;
+            animation-duration: 25s;
+        }
+
+        .blob-2 {
+            width: 600px;
+            height: 600px;
+            background: rgba(255, 0, 150, 0.15);
+            bottom: -200px;
+            right: -200px;
+            animation-delay: -10s;
+            animation-duration: 30s;
+        }
+
+        .blob-3 {
+            width: 400px;
+            height: 400px;
+            background: rgba(138, 43, 226, 0.1);
+            top: 40%;
+            right: -100px;
+            animation-delay: -5s;
+            animation-duration: 20s;
+        }
+
+        @keyframes move {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(5%, 10%) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-5%, 5%) scale(0.9);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
         }
 
         .container {
             width: 100%;
             max-width: 500px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 28px;
-            padding: 35px 25px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.25) 100%);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 32px;
+            padding: 40px 25px;
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.08),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
             text-align: center;
             position: relative;
             z-index: 10;
@@ -106,7 +138,7 @@
         .service-card:hover {
             background: rgba(255, 255, 255, 0.1);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
         .service-card.selected {
@@ -147,22 +179,24 @@
             font-weight: 500;
         }
 
-        input, textarea {
+        input,
+        textarea {
             width: 100%;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
-            padding: 12px 15px;
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1a1a1a;
+            padding: 14px 18px;
+            border-radius: 16px;
             outline: none;
             font-size: 15px;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        input:focus, textarea:focus {
-            background: rgba(0, 0, 0, 0.3);
-            border-color: rgba(0, 212, 255, 0.5);
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        input:focus,
+        textarea:focus {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
         }
 
         textarea {
@@ -170,8 +204,9 @@
             min-height: 80px;
         }
 
-        input::placeholder, textarea::placeholder {
-            color: rgba(255, 255, 255, 0.4);
+        input::placeholder,
+        textarea::placeholder {
+            color: rgba(0, 0, 0, 0.3);
         }
 
         .submit-btn {
@@ -185,7 +220,7 @@
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
             margin-top: 10px;
         }
@@ -205,10 +240,12 @@
         }
     </style>
 </head>
+
 <body>
 
-    <div class="bg-sphere sphere-1"></div>
-    <div class="bg-sphere sphere-2"></div>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div class="bg-blob blob-3"></div>
 
     <div class="container">
         <h1>🚀 Loyiha Buyurtma qilish</h1>
@@ -239,7 +276,8 @@
 
         <div class="form-group">
             <label for="details">Loyiha haqida qisqacha</label>
-            <textarea id="details" placeholder="Qanday loyiha qilishni xohlaysiz? Qanday funksiyalar bo'lishi kerak?"></textarea>
+            <textarea id="details"
+                placeholder="Qanday loyiha qilishni xohlaysiz? Qanday funksiyalar bo'lishi kerak?"></textarea>
         </div>
 
         <button class="submit-btn" id="submitBtn" disabled>Xizmatni tanlang</button>
@@ -257,7 +295,7 @@
         const submitBtn = document.getElementById('submitBtn');
 
         function updateMainButton() {
-            if(selectedServices.size > 0 && phoneInput.value.trim().length > 6) {
+            if (selectedServices.size > 0 && phoneInput.value.trim().length > 6) {
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Yuborish ✨";
                 tg.MainButton.text = "SO'ROVNI YUBORISH";
@@ -290,8 +328,8 @@
         phoneInput.addEventListener('input', updateMainButton);
 
         function submitOrder() {
-            if(submitBtn.disabled) return;
-            
+            if (submitBtn.disabled) return;
+
             const data = {
                 type: "order_webapp",
                 services: Array.from(selectedServices),
@@ -340,13 +378,15 @@
                 ctx.lineWidth = 3;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
-                
+
                 for (let i = 0; i < points.length; i++) {
                     const p = points[i];
                     const age = now - p.time;
                     const opacity = 1 - (age / duration);
-                    
+
                     ctx.strokeStyle = `rgba(0, 0, 0, ${opacity * 0.4})`;
+                    ctx.lineWidth = (1 - (age / duration)) * 4 + 1; // Smooth tapering
+
                     if (i === 0) {
                         ctx.moveTo(p.x, p.y);
                     } else {
@@ -362,4 +402,5 @@
         animate();
     </script>
 </body>
+
 </html>
