@@ -24,74 +24,112 @@ def register_handlers(bot: telebot.TeleBot):
             text = "Assalomu alaykum! 🚀 IT xizmatlari buyurtma botiga xush kelibsiz!\n\nBiz sizga Web sayt, Telegram bot va Mobil ilovalar yaratishda yordam beramiz. Quyidagi menyudan kerakli bo'limni tanlang 👇"
             bot.send_message(message.chat.id, text, reply_markup=kb.main_menu_kb())
 
-    # Admin Panel Handlers
+    # Professional Admin Panel Handlers
     @bot.message_handler(func=lambda msg: str(msg.from_user.id) == str(ADMIN_ID))
     def admin_handlers(message):
         if message.text == "📊 Statistika":
             stats = db.get_admin_stats()
             text = (
-                f"📊 *Bot Statistikasi:*\n\n"
-                f"👤 Foydalanuvchilar: {stats.get('users', 0)}\n"
-                f"📦 Jami buyurtmalar: {stats.get('total', 0)}\n\n"
-                f"🟡 Yangi: {stats.get('new', 0)}\n"
-                f"✅ Tasdiqlangan: {stats.get('confirmed', 0)}\n"
-                f"❌ Bekor qilingan: {stats.get('canceled', 0)}"
+                f"📊 *Professional Admin Statistika:*\n\n"
+                f"👥 Foydalanuvchilar soni: {stats.get('users', 0)}\n"
+                f"🟡 Yangi buyurtmalar soni: {stats.get('new', 0)}\n"
+                f"✅ Tasdiqlangan buyurtmalar soni: {stats.get('confirmed', 0)}\n"
+                f"❌ Bekor qilingan buyurtmalar soni: {stats.get('canceled', 0)}\n"
+                f"📦 Jami buyurtmalar soni: {stats.get('total', 0)}"
             )
             bot.send_message(message.chat.id, text, parse_mode="Markdown")
             
-        elif message.text == "🆕 Yangi buyurtmalar":
+        elif message.text == "🆕 Yangi buyurtmalar" or message.text == "/submit":
             orders = db.get_orders_by_status("new")
             if not orders:
                 bot.send_message(message.chat.id, "Hozircha yangi buyurtmalar yo'q. 🤷‍♂️")
                 return
             
-            for order in orders:
-                text = (
-                    f"🆕 *YANGI BUYURTMA*\n"
-                    f"ID: `{order['_id']}`\n"
-                    f"👤 Mijoz: {order.get('user_name', 'Noma\\'lum')}\n"
-                    f"📁 Loyiha: {order.get('items', ['-'])[0]}\n"
-                )
-                bot.send_message(message.chat.id, text, parse_mode="Markdown", reply_markup=kb.admin_order_kb(order['_id']))
+            text = "🆕 *Yangi buyurtmalar ro'yxati:*\n\n"
+            for i, order in enumerate(orders, 1):
+                # Birinchi tanlangan xizmat nomi loyiha nomi sifatida ishlatiladi
+                proj_name = order.get('items', ['Noma’lum'])[0]
+                text += f"{i}. {proj_name} — /submit_{order['_id']}\n"
+            
+            bot.send_message(message.chat.id, text, parse_mode="Markdown")
+
+        elif message.text.startswith("/submit_"):
+            order_id = message.text.replace("/submit_", "")
+            order = db.get_order_by_id(order_id)
+            if not order:
+                bot.send_message(message.chat.id, "❌ Buyurtma topilmadi.")
+                return
+            
+            u_name = order.get('user_name', 'Noma’lum')
+            u_login = order.get('username', '-')
+            u_phone = order.get('phone', '-')
+            u_details = order.get('details', '-')
+            
+            services_list = "\n".join([f"✔️ {s}" for s in order.get('items', [])])
+            details = (
+                f"📝 *BUYURTMA TAFSILOTLARI*\n\n"
+                f"👤 Mijoz: {u_name}\n"
+                f"🔗 Username: @{u_login}\n"
+                f"📱 Tel: {u_phone}\n\n"
+                f"📁 Xizmatlar:\n{services_list}\n\n"
+                f"💬 Tavsif: {u_details}"
+            )
+            bot.send_message(message.chat.id, details, parse_mode="Markdown", reply_markup=kb.admin_order_kb(order['_id']))
 
         elif message.text == "✅ Tasdiqlanganlar":
             orders = db.get_orders_by_status("confirmed")
-            text = "✅ *Tasdiqlangan loyihalar:*\n\n" + "\n".join([f"🔹 {o.get('user_name')} - {o.get('items', ['-'])[0]}" for o in orders]) if orders else "Ro'yxat bo'sh."
+            text = "✅ *Tasdiqlangan loyihalar:*\n\n"
+            if not orders:
+                text += "Ro'yxat bo'sh."
+            else:
+                for o in orders:
+                    name = o.get('user_name', 'Noma’lum')
+                    service = o.get('items', ['-'])[0]
+                    text += f"🔹 {name} - {service} (/submit_{o['_id']})\n"
             bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
         elif message.text == "❌ Bekor qilinganlar":
             orders = db.get_orders_by_status("canceled")
-            text = "❌ *Bekor qilingan loyihalar:*\n\n" + "\n".join([f"🔸 {o.get('user_name')} - {o.get('items', ['-'])[0]}" for o in orders]) if orders else "Ro'yxat bo'sh."
+            text = "❌ *Bekor qilingan loyihalar:*\n\n"
+            if not orders:
+                text += "Ro'yxat bo'sh."
+            else:
+                for o in orders:
+                    name = o.get('user_name', 'Noma’lum')
+                    service = o.get('items', ['-'])[0]
+                    text += f"🔸 {name} - {service} (/submit_{o['_id']})\n"
             bot.send_message(message.chat.id, text, parse_mode="Markdown")
             
         elif message.text == "➕ Bilim qo'shish":
-            bot.send_message(message.chat.id, "Bilimlar bazasiga ma'lumot qo'shish uchun quyidagi formatda yozing:\n`/add_info Bilim matni`", parse_mode="Markdown")
+            bot.send_message(message.chat.id, "Bilimlar bazasiga ma'lumot qo'shish uchun: `/add_info [matn]`")
 
     # Callback handlers for admin approval
     @bot.callback_query_handler(func=lambda call: call.data.startswith(("conf_", "canc_")))
-    def admin_action(call):
+    def admin_approval_action(call):
         action, order_id = call.data.split("_")
         order = db.get_order_by_id(order_id)
         
         if not order:
-            bot.answer_callback_query(call.id, "Buyurtma topilmadi!")
+            bot.answer_callback_query(call.id, "Xatolik: Buyurtma topilmadi!")
             return
 
         if action == "conf":
             db.update_order_status(order_id, "confirmed")
             bot.edit_message_text(f"✅ Buyurtma tasdiqlandi!\nMijoz: {order.get('user_name')}", call.message.chat.id, call.message.message_id)
             
-            # Userga xabar yuborish
+            # Userga xabar yuborish (EXACT REQUESTED TEMPLATE)
+            tg_username = f"@{order.get('username')}" if order.get('username') else order.get('user_name', 'Foydalanuvchi')
+            project_name = order.get('items', ['Loyiha'])[0]
+            
             user_msg = (
-                f"Assalomu aleykum, {order.get('username', order.get('user_name'))}! "
-                f"Sizning {order.get('items', ['Loyiha'])[0]} nomli buyurtmangiz admin tomonidan tasdiqlandi! "
-                f"Endi admin siz bilan aloqaga chiqishi mumkin. "
+                f"Assalomu aleykum, {tg_username}! Sizning {project_name} nomli buyurtmangiz admin tomonidan tasdiqlandi! "
+                f"Endi admin siz bilan aloqaga chiqishi mumki. "
                 f"Diqqat! Agar admin siz bilan aloqaga chiqishga urinib, siz 7 kun ichida javob bermasangiz, buyurtmangiz bekor qilinadi!"
             )
             try:
                 bot.send_message(order['user_id'], user_msg)
-            except:
-                pass
+            except Exception as e:
+                print(f"Bildirishnoma yuborishda xato: {e}")
                 
         elif action == "canc":
             db.update_order_status(order_id, "canceled")
