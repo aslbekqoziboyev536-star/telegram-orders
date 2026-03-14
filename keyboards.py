@@ -53,3 +53,21 @@ def cancel_only_kb() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     kb.add(KeyboardButton(text="❌ Bekor qilish"))
     return kb
+
+def admin_menu_kb() -> ReplyKeyboardMarkup:
+    """Admin uchun maxsus menyu"""
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    kb.add(KeyboardButton(text="📊 Statistika"))
+    kb.add(KeyboardButton(text="🆕 Yangi buyurtmalar"))
+    kb.add(KeyboardButton(text="✅ Tasdiqlanganlar"), KeyboardButton(text="❌ Bekor qilinganlar"))
+    kb.add(KeyboardButton(text="➕ Bilim qo'shish"))
+    return kb
+
+def admin_order_kb(order_id) -> InlineKeyboardMarkup:
+    """Buyurtmani boshqarish tugmalari"""
+    kb = InlineKeyboardMarkup(row_width=2)
+    kb.add(
+        InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"conf_{order_id}"),
+        InlineKeyboardButton(text="❌ Bekor qilish", callback_data=f"canc_{order_id}")
+    )
+    return kb

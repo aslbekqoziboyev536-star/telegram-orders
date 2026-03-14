@@ -10,9 +10,11 @@ try:
     carts_col = db["carts"]
     orders_col = db["orders"]
     knowledge_col = db["knowledge_base"]
+    users_col = db["users"]
     
     # Text index yaratish (qidiruv uchun)
     knowledge_col.create_index([("text", "text")])
+    users_col.create_index("user_id", unique=True)
     
     # Initialize basic services if collection is empty
     if products_col.count_documents({}) == 0:
@@ -119,12 +121,60 @@ def add_knowledge(text):
         print(f"Error adding knowledge: {e}")
         return False
 
-def search_knowledge(query):
-    """Bilimlar bazasidan qidirish"""
+def save_user(user_id, username, full_name):
+    """Foydalanuvchini bazaga saqlash (statistik uchun)"""
     try:
-        # Matn bo'yicha qidiruv
-        results = knowledge_col.find({"$text": {"$search": query}}).limit(3)
-        return list(results)
+        users_col.update_one(
+            {"user_id": str(user_id)},
+            {"$set": {"username": username, "full_name": full_name}},
+            upsert=True
+        )
     except Exception as e:
-        print(f"Error searching knowledge: {e}")
+        print(f"Error saving user: {e}")
+
+def get_admin_stats():
+    """Admin panel uchun statistikani olish"""
+    try:
+        user_count = users_col.count_documents({})
+        total_orders = orders_col.count_documents({})
+        new_orders = orders_col.count_documents({"status": "new"})
+        confirmed_orders = orders_col.count_documents({"status": "confirmed"})
+        canceled_orders = orders_col.count_documents({"status": "canceled"})
+        
+        return {
+            "users": user_count,
+            "total": total_orders,
+            "new": new_orders,
+            "confirmed": confirmed_orders,
+            "canceled": canceled_orders
+        }
+    except Exception as e:
+        print(f"Error getting stats: {e}")
+        return {}
+
+def get_orders_by_status(status):
+    """Status bo'yicha buyurtmalarni olish"""
+    try:
+        return list(orders_col.find({"status": status}))
+    except Exception as e:
+        print(f"Error getting orders: {e}")
         return []
+
+def get_order_by_id(order_id):
+    """ID bo'yicha buyurtmani olish"""
+    from bson.objectid import ObjectId
+    try:
+        return orders_col.find_one({"_id": ObjectId(order_id)})
+    except Exception as e:
+        print(f"Error getting order by id: {e}")
+        return None
+
+def update_order_status(order_id, status):
+    """Buyurtma statusini o'zgartirish"""
+    from bson.objectid import ObjectId
+    try:
+        orders_col.update_one({"_id": ObjectId(order_id)}, {"$set": {"status": status}})
+        return True
+    except Exception as e:
+        print(f"Error updating order: {e}")
+        return False
