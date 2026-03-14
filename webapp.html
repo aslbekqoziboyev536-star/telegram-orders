@@ -14,36 +14,47 @@
         }
 
         body {
-            background: linear-gradient(135deg, #1e0b36 0%, #301847 50%, #4a2569 100%);
+            background: #f0f2f5;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             padding: 20px;
-            color: #fff;
+            color: #1a1a1a;
             overflow-x: hidden;
+            position: relative;
         }
 
-        /* Animated background spheres */
+        #trail-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Glass magnifier background spheres */
         .bg-sphere {
             position: fixed;
             border-radius: 50%;
-            filter: blur(80px);
+            filter: blur(60px);
             z-index: -1;
-            animation: float 10s infinite alternate;
+            animation: float 15s infinite alternate;
         }
         
         .sphere-1 {
-            width: 300px; height: 300px;
-            background: rgba(138, 43, 226, 0.4);
+            width: 400px; height: 400px;
+            background: rgba(0, 150, 255, 0.15);
             top: -100px; left: -100px;
         }
         
         .sphere-2 {
-            width: 400px; height: 400px;
-            background: rgba(0, 212, 255, 0.3);
+            width: 500px; height: 500px;
+            background: rgba(255, 0, 150, 0.1);
             bottom: -150px; right: -150px;
-            animation-delay: -5s;
+            animation-delay: -7s;
         }
 
         @keyframes float {
@@ -54,23 +65,24 @@
         .container {
             width: 100%;
             max-width: 500px;
-            /* Liquid Glass / Glassmorphism effect */
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 24px;
-            padding: 30px 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 28px;
+            padding: 35px 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
             text-align: center;
+            position: relative;
+            z-index: 10;
         }
 
         h1 {
-            font-size: 24px;
-            margin-bottom: 25px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            font-weight: 600;
-            letter-spacing: 1px;
+            font-size: 26px;
+            margin-bottom: 30px;
+            color: #1a1a1a;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
         .services-grid {
@@ -230,8 +242,10 @@
             <textarea id="details" placeholder="Qanday loyiha qilishni xohlaysiz? Qanday funksiyalar bo'lishi kerak?"></textarea>
         </div>
 
-        <button class="submit-btn" id="submitBtn" disabled>Yuborish qulflandi</button>
+        <button class="submit-btn" id="submitBtn" disabled>Xizmatni tanlang</button>
     </div>
+
+    <canvas id="trail-canvas"></canvas>
 
     <script>
         let tg = window.Telegram.WebApp;
@@ -250,7 +264,11 @@
                 tg.MainButton.show();
             } else {
                 submitBtn.disabled = true;
-                submitBtn.innerText = "Ma'lumotlarni to'ldiring";
+                if (selectedServices.size === 0) {
+                    submitBtn.innerText = "Hech bo'lmasa 1ta xizmat tanlang";
+                } else {
+                    submitBtn.innerText = "Telefon raqamingizni kiriting";
+                }
                 tg.MainButton.hide();
             }
         }
@@ -287,6 +305,61 @@
 
         submitBtn.addEventListener('click', submitOrder);
         tg.MainButton.onClick(submitOrder);
+
+        // Cursor Trail Logic
+        const canvas = document.getElementById('trail-canvas');
+        const ctx = canvas.getContext('2d');
+        let points = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        window.addEventListener('mousemove', (e) => {
+            points.push({
+                x: e.clientX,
+                y: e.clientY,
+                time: Date.now()
+            });
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const now = Date.now();
+            const duration = 1500;
+
+            points = points.filter(p => now - p.time < duration);
+
+            if (points.length > 1) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                for (let i = 0; i < points.length; i++) {
+                    const p = points[i];
+                    const age = now - p.time;
+                    const opacity = 1 - (age / duration);
+                    
+                    ctx.strokeStyle = `rgba(0, 0, 0, ${opacity * 0.4})`;
+                    if (i === 0) {
+                        ctx.moveTo(p.x, p.y);
+                    } else {
+                        ctx.lineTo(p.x, p.y);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
     </script>
 </body>
 </html>

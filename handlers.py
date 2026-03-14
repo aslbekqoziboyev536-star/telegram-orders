@@ -4,6 +4,7 @@ import json
 
 import keyboards as kb
 import database as db
+import ai_logic as ai
 from config import ADMIN_ID
 
 # Status dictionary o'rniga oddiy xotirada saqlash usuli
@@ -31,6 +32,23 @@ def register_handlers(bot: telebot.TeleBot):
     @bot.message_handler(func=lambda msg: msg.text == "💻 Oddiy xizmat buyurtirish")
     def show_products(message):
         bot.send_message(message.chat.id, "Qaysi xizmat turlariga qiziqyapiz? Narxlar loyiha qamroviga qarab belgilanadi:", reply_markup=kb.products_menu_kb())
+
+    # Admin uchun bilimlar bazasiga ma'lumot qo'shish
+    @bot.message_handler(commands=['add_info'])
+    def add_info_handler(message):
+        if str(message.from_user.id) != str(ADMIN_ID):
+            bot.reply_to(message, "Siz admin emassiz! ❌")
+            return
+        
+        text_to_add = message.text.replace('/add_info', '').strip()
+        if not text_to_add:
+            bot.reply_to(message, "Iltimos, qo'shmoqchi bo'lgan ma'lumotingizni yozing.\nMisol: `/add_info Bizning ofisimiz Toshkent shahrida.`", parse_mode="Markdown")
+            return
+        
+        if db.add_knowledge(text_to_add):
+            bot.reply_to(message, "✅ Ma'lumot bilimlar bazasiga qo'shildi!")
+        else:
+            bot.reply_to(message, "❌ Xatolik yuz berdi.")
 
     # Mini App dan kelgan ma'lumotlarni qabul qilish
     @bot.message_handler(content_types=['web_app_data'])
@@ -215,3 +233,15 @@ def register_handlers(bot: telebot.TeleBot):
                 "✅ So'rovingiz muvaffaqiyatli qabul qilindi! Tez orada mutaxassislarimiz siz bilan bog'lanib barcha detallarni kelishib olishadi.",
                 reply_markup=kb.main_menu_kb()
             )
+
+        # AI Fallback Handler
+        @bot.message_handler(func=lambda msg: True, content_types=['text'])
+        def ai_responder(message):
+            # Agar foydalanuvchi biror state ichida bo'lsa (telefon raqami kutilyapti va h.k.), AI aralashmaydi
+            if message.from_user.id in user_states:
+                return
+            
+            # AI orqali javob olish
+            bot.send_chat_action(message.chat.id, 'typing')
+            response = ai.get_ai_response(message.text, message.from_user.id)
+            bot.reply_to(message, response)

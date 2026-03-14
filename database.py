@@ -9,6 +9,10 @@ try:
     products_col = db["services"]
     carts_col = db["carts"]
     orders_col = db["orders"]
+    knowledge_col = db["knowledge_base"]
+    
+    # Text index yaratish (qidiruv uchun)
+    knowledge_col.create_index([("text", "text")])
     
     # Initialize basic services if collection is empty
     if products_col.count_documents({}) == 0:
@@ -105,3 +109,22 @@ def save_order(user_id, username, user_name, phone, details, items):
     except Exception as e:
         print(f"Error saving order: {e}")
         return False
+
+def add_knowledge(text):
+    """Admin tomonidan bilimlar bazasiga ma'lumot qo'shish"""
+    try:
+        knowledge_col.insert_one({"text": text})
+        return True
+    except Exception as e:
+        print(f"Error adding knowledge: {e}")
+        return False
+
+def search_knowledge(query):
+    """Bilimlar bazasidan qidirish"""
+    try:
+        # Matn bo'yicha qidiruv
+        results = knowledge_col.find({"$text": {"$search": query}}).limit(3)
+        return list(results)
+    except Exception as e:
+        print(f"Error searching knowledge: {e}")
+        return []
