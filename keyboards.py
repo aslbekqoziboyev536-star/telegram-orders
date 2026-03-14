@@ -3,7 +3,7 @@ from database import get_products
 import os
 
 # Web App manzili (Buni o'zingiz host qilgan manzilingizga almashtiring)
-WEB_APP_URL = "https://your-webapp-link.vercel.app"
+WEB_APP_URL = "https://telegram-orders.vercel.app"
 
 def main_menu_kb() -> ReplyKeyboardMarkup:
     """Asosiy menyu klaviaturasi"""

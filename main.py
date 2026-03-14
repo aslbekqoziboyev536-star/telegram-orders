@@ -1,5 +1,8 @@
 import telebot
 import logging
+import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from config import BOT_TOKEN
 from handlers import register_handlers
 
@@ -9,19 +12,39 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
+# Render uchun health-check HTTP server
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+    def log_message(self, format, *args):
+        pass  # HTTP loglarini o'chir
+
+def run_health_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    logging.info(f"✅ Health-check server {port}-portda ishga tushdi")
+    server.serve_forever()
+
 def main():
     # 1. Botni tekshirish
     if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
         logging.error("❌ BOT_TOKEN topilmadi! .env faylini tekshiring.")
         return
 
-    # 2. Botni yaratish va handlerlarni ro'yxatdan o'tkazish
+    # 2. Render uchun HTTP serverini fon threadida ishga tushirish
+    health_thread = threading.Thread(target=run_health_server, daemon=True)
+    health_thread.start()
+
+    # 3. Botni yaratish va handlerlarni ro'yxatdan o'tkazish
     bot = telebot.TeleBot(BOT_TOKEN)
     register_handlers(bot)
 
     logging.info("🚀 Bot Polling rejimida ishga tushmoqda...")
-    
-    # 3. Webhookni tozalash va Pollingni boshlash
+
+    # 4. Webhookni tozalash va Pollingni boshlash
     try:
         bot.remove_webhook()
         bot.infinity_polling(timeout=10, long_polling_timeout=5)

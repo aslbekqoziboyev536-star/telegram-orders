@@ -177,7 +177,8 @@ def register_handlers(bot: telebot.TeleBot):
             phone = order_data.get('phone', 'Noma\'lum')
             details = order_data.get('details', 'Yo\'q')
             user_name = message.from_user.first_name
-            username = f"@{message.from_user.username}" if message.from_user.username else "-"
+            # username ni @ belgisisiz saqlaymiz (admin panelda @ qo'shiladi)
+            username = message.from_user.username or "-"
 
             # Save to Database with UNIQUE status
             db.save_order(
