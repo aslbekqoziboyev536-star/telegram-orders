@@ -1,6 +1,7 @@
 import telebot
 import logging
 import os
+import time
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from config import BOT_TOKEN
@@ -44,12 +45,22 @@ def main():
 
     logging.info("🚀 Bot Polling rejimida ishga tushmoqda...")
 
-    # 4. Webhookni tozalash va Pollingni boshlash
-    try:
-        bot.remove_webhook()
-        bot.infinity_polling(timeout=10, long_polling_timeout=5)
-    except Exception as e:
-        logging.error(f"❌ Bot ishlashida xatolik: {e}")
+    # 4. Webhookni tozalash va Pollingni boshlash (409 xatosi uchun retry)
+    while True:
+        try:
+            bot.remove_webhook()
+            bot.infinity_polling(timeout=10, long_polling_timeout=5)
+        except telebot.apihelper.ApiTelegramException as e:
+            if e.error_code == 409:
+                logging.warning("⚠️ 409 Conflict: boshqa bot instance ishlayapti. 15 soniyadan keyin qayta uriniladi...")
+                time.sleep(15)
+            else:
+                logging.error(f"❌ Telegram API xatoligi: {e}")
+                time.sleep(5)
+        except Exception as e:
+            logging.error(f"❌ Bot ishlashida xatolik: {e}")
+            time.sleep(5)
 
 if __name__ == "__main__":
     main()
+
