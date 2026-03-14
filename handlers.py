@@ -236,12 +236,9 @@ def register_handlers(bot: telebot.TeleBot):
 
         # AI Fallback Handler
         @bot.message_handler(func=lambda msg: True, content_types=['text'])
-        def ai_responder(message):
-            # Agar foydalanuvchi biror state ichida bo'lsa (telefon raqami kutilyapti va h.k.), AI aralashmaydi
+        def warning_responder(message):
+            # Agar foydalanuvchi biror state ichida bo'lsa (telefon raqami kutilyapti va h.k.), xalaqit bermaydi
             if message.from_user.id in user_states:
                 return
             
-            # AI orqali javob olish
-            bot.send_chat_action(message.chat.id, 'typing')
-            response = ai.get_ai_response(message.text, message.from_user.id)
-            bot.reply_to(message, response)
+            bot.reply_to(message, "Iltimos, botga to'g'ridan to'g'ri xabar yuboora olmaysiz. Tugmalar va buyruqlar orqali ishlang!")

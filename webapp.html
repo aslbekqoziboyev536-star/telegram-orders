@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT Xizmatlar Buyurtmasi</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/imask"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -95,18 +96,31 @@
         .container {
             width: 100%;
             max-width: 500px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.25) 100%);
-            backdrop-filter: blur(25px) saturate(200%);
-            -webkit-backdrop-filter: blur(25px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 32px;
             padding: 40px 25px;
             box-shadow:
-                0 25px 50px -12px rgba(0, 0, 0, 0.08),
-                inset 0 0 20px rgba(255, 255, 255, 0.2);
+                0 30px 60px -12px rgba(0, 0, 0, 0.1),
+                inset 0 0 30px rgba(255, 255, 255, 0.1);
             text-align: center;
             position: relative;
             z-index: 10;
+        }
+
+        /* Shine effect for liquid glass */
+        .container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+            border-radius: 32px 32px 0 0;
+            pointer-events: none;
         }
 
         h1 {
@@ -175,8 +189,21 @@
             display: block;
             margin-bottom: 8px;
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: 500;
+            color: #2c3e50;
+            /* High contrast dark color */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .char-count {
+            font-size: 11px;
+            color: #555;
+            float: right;
+            margin-top: -22px;
+            margin-right: 10px;
+            position: relative;
+            z-index: 5;
         }
 
         input,
@@ -194,9 +221,10 @@
 
         input:focus,
         textarea:focus {
-            background: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.8);
             border-color: #00d4ff;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);
+            color: #000;
         }
 
         textarea {
@@ -238,6 +266,66 @@
             cursor: not-allowed;
             transform: none;
         }
+
+        /* Admin Button and Modal */
+        .admin-trigger {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #2c3e50;
+            text-decoration: underline;
+            cursor: pointer;
+            display: none;
+            /* Hidden by default */
+            opacity: 0.7;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 28px;
+            width: 90%;
+            max-width: 400px;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #1a1a1a;
+            font-size: 22px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .admin-dashboard-list {
+            max-height: 300px;
+            overflow-y: auto;
+            color: #333;
+            font-size: 14px;
+        }
     </style>
 </head>
 
@@ -271,31 +359,86 @@
 
         <div class="form-group">
             <label for="phone">Telefon raqamingiz</label>
-            <input type="tel" id="phone" placeholder="+998 90 123 45 67">
+            <input type="tel" id="phone" placeholder="+998-00-000-00-00">
         </div>
 
         <div class="form-group">
             <label for="details">Loyiha haqida qisqacha</label>
             <textarea id="details"
                 placeholder="Qanday loyiha qilishni xohlaysiz? Qanday funksiyalar bo'lishi kerak?"></textarea>
+            <div class="char-count" id="charCount">0 / 150</div>
         </div>
 
         <button class="submit-btn" id="submitBtn" disabled>Xizmatni tanlang</button>
+
+        <div class="admin-trigger" id="adminBtn">⚙️ Admin Panel</div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeModal">&times;</span>
+            <h3>Admin Kirish</h3>
+            <div class="form-group">
+                <label style="color: #333">Login</label>
+                <input type="text" id="adminLogin" placeholder="admin@orders.bot" style="color: #000; background: #eee">
+            </div>
+            <div class="form-group">
+                <label style="color: #333">Parol</label>
+                <input type="password" id="adminPass" placeholder="••••••••" style="color: #000; background: #eee">
+            </div>
+            <button class="submit-btn" id="loginBtn">Kirish</button>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard (Simple view) -->
+    <div id="adminDashboard" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-modal" id="closeDash">&times;</span>
+            <h3 style="color: #000">🚀 Admin Boshqaruv</h3>
+            <p style="color: #444; margin-bottom: 20px;">Loyiha xizmatlari va bilimlar bazasini bot orqali boshqaring
+                (/add_info buyrug'i).</p>
+            <div style="max-height: 300px; overflow-y: auto; color: #1a1a1a;" id="adminInfo">
+                <!-- Stats or info could go here -->
+                <p>Status: Tizim faol</p>
+                <p>Mijozlar soni: O'sib bormoqda</p>
+            </div>
+        </div>
     </div>
 
     <canvas id="trail-canvas"></canvas>
 
     <script>
         let tg = window.Telegram.WebApp;
+        const ADMIN_ID = "7342611753"; // From config
         tg.expand();
+
+        // Check if current user is admin
+        if (tg.initDataUnsafe.user && String(tg.initDataUnsafe.user.id) === ADMIN_ID) {
+            document.getElementById('adminBtn').style.display = 'block';
+        }
 
         let selectedServices = new Set();
         const serviceCards = document.querySelectorAll('.service-card');
         const phoneInput = document.getElementById('phone');
+        const detailsInput = document.getElementById('details');
         const submitBtn = document.getElementById('submitBtn');
+        const charCount = document.getElementById('charCount');
+
+        // Phone mask init
+        const phoneMask = IMask(phoneInput, {
+            mask: '+{000}-{00}-{000}-{00}-{00}'
+        });
 
         function updateMainButton() {
-            if (selectedServices.size > 0 && phoneInput.value.trim().length > 6) {
+            const isPhoneComplete = phoneMask.masked.isComplete;
+            const detailsText = detailsInput.value.trim();
+            const isDetailsValid = detailsText.length >= 150;
+
+            charCount.innerText = `${detailsText.length} / 150`;
+            charCount.style.color = isDetailsValid ? "#27ae60" : "#e74c3c";
+
+            if (selectedServices.size > 0 && isPhoneComplete && isDetailsValid) {
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Yuborish ✨";
                 tg.MainButton.text = "SO'ROVNI YUBORISH";
@@ -303,9 +446,11 @@
             } else {
                 submitBtn.disabled = true;
                 if (selectedServices.size === 0) {
-                    submitBtn.innerText = "Hech bo'lmasa 1ta xizmat tanlang";
+                    submitBtn.innerText = "Xizmatni tanlang";
+                } else if (!isPhoneComplete) {
+                    submitBtn.innerText = "Tel: +###-##-###-##-##";
                 } else {
-                    submitBtn.innerText = "Telefon raqamingizni kiriting";
+                    submitBtn.innerText = `Kamida ${150 - detailsText.length} ta belgi qoldi`;
                 }
                 tg.MainButton.hide();
             }
@@ -326,6 +471,7 @@
         });
 
         phoneInput.addEventListener('input', updateMainButton);
+        detailsInput.addEventListener('input', updateMainButton);
 
         function submitOrder() {
             if (submitBtn.disabled) return;
@@ -343,6 +489,32 @@
 
         submitBtn.addEventListener('click', submitOrder);
         tg.MainButton.onClick(submitOrder);
+
+        // Admin Logic
+        const loginModal = document.getElementById('loginModal');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const adminBtn = document.getElementById('adminBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const adminLogin = document.getElementById('adminLogin');
+        const adminPass = document.getElementById('adminPass');
+
+        adminBtn.onclick = () => loginModal.style.display = 'flex';
+        document.getElementById('closeModal').onclick = () => loginModal.style.display = 'none';
+        document.getElementById('closeDash').onclick = () => adminDashboard.style.display = 'none';
+
+        loginBtn.onclick = () => {
+            if (adminLogin.value === "admin@orders.bot" && adminPass.value === "OrdersforCogy") {
+                loginModal.style.display = 'none';
+                adminDashboard.style.display = 'flex';
+            } else {
+                alert("Login yoki parol xato! ❌");
+            }
+        };
+
+        window.onclick = (event) => {
+            if (event.target == loginModal) loginModal.style.display = "none";
+            if (event.target == adminDashboard) adminDashboard.style.display = "none";
+        };
 
         // Cursor Trail Logic
         const canvas = document.getElementById('trail-canvas');
