@@ -1,0 +1,7 @@
+# Git and GitHub Push Tasks
+
+- [ ] Install Git via `winget`
+- [ ] Initialize Git repository
+- [ ] Add files and make initial commit
+- [ ] Add GitHub remote repository
+- [ ] Push code to GitHub (this will prompt for login)
