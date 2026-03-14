@@ -1,9 +1,9 @@
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 from database import get_products
 import os
-from config import WEBHOOK_URL
 
-WEB_APP_URL = WEBHOOK_URL if WEBHOOK_URL else "https://your-domain.vercel.app"
+# Web App manzili (Buni o'zingiz host qilgan manzilingizga almashtiring)
+WEB_APP_URL = "https://your-webapp-link.vercel.app"
 
 def main_menu_kb() -> ReplyKeyboardMarkup:
     """Asosiy menyu klaviaturasi"""
